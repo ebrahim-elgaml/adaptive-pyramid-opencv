@@ -76,6 +76,19 @@ std::vector< std::vector<double> >  getCorrspondingVariance(Mat image) {
   }
   return v;
 }
+std::vector< std::vector<double> >  getCorrspondingMean(Mat image) {
+  std::vector< std::vector<double> > m;
+  for(int i=0;i<image.rows;i++){
+    std::vector< std::vector<double> > meanVector;
+    for(int j=0;j<image.cols;j++) {
+      vector<Point2i> neighbourPoints= getneighbourhood(image, i,j);
+      double mean= getMean(image,neighbourPoints);
+      meanVector.push_back(mean);
+    }
+      m.push_back(meanVector);
+  }
+  return m;
+}
 
 void printVectorOfVectores(std::vector< std::vector<double> > v) {
   for( int i = 0; i< v.size(); ++i){
