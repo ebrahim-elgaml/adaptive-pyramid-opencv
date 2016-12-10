@@ -54,32 +54,45 @@ double getVariance(Mat image,int mean, vector<Point2i> neighbourPoints) {
   double resultVariance = 0;
   double variance = 0;
   for(int i =0; i<neighbourPoints.size();i++) {
-    resultVariance += pow(image.at<uchar>(neighbourPoints[i])- mean, 2.0);
+    double v = image.at<uchar>(neighbourPoints[i])- mean;
+    resultVariance += v*v;
   }
   variance = resultVariance/neighbourPoints.size();
   return variance;
 }
 
-void getResultImage() {
-  Mat image = imread("./images/L1.jpg");
-  Mat resultImage = Mat::zeros(image.rows, image.cols, image.type());
+std::vector< std::vector<double> >  getCorrspondingVariance(Mat image) {
+  std::vector< std::vector<double> > v;
   for(int i=0;i<image.rows;i++){
+    std::vector<double> varianceVector;
     for(int j=0;j<image.cols;j++) {
       vector<Point2i> neighbourPoints= getneighbourhood(image, i,j);
-      int mean= getMean(image,neighbourPoints);
-      int variance = getVariance(image,mean,neighbourPoints);
-      resultImage.at<uchar>(i,j) = variance;
-
+      double mean= getMean(image,neighbourPoints);
+      double variance = getVariance(image,mean,neighbourPoints);
+      std::cout << "/* My Mean */" << mean << " myVariance: " << variance << '\n';
+      varianceVector.push_back(variance);
     }
+    v.push_back(varianceVector);
   }
+  return v;
 }
 
+void printVectorOfVectores(std::vector< std::vector<double> > v) {
+  for( int i = 0; i< v.size(); ++i){
+    for (int j = 0; j < v[i].size(); j++) {
+      std::cout << "" << v[i][j] << ", ";
+    }
+    std::cout << '\n';
+  }
+}
 int main( int argc, char** argv )
 {
     std::cout << "/* Hello CV */" << '\n';
 
     printf("DONE\n");
-    getResultImage();
+    // Mat image = imread("./images/L1.jpg", 1);
+    Mat image = (Mat_<uchar>(5,5) << 42, 43, 43, 44, 45, 43, 43, 44, 45, 45, 44, 44, 45, 46, 46, 44, 45, 46, 46, 47, 45, 46, 46, 47, 48);
+    printVectorOfVectores(getCorrspondingVariance(image));
 
     waitKey();
     return 0;
