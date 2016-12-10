@@ -54,7 +54,7 @@ double getVariance(Mat image,int mean, vector<Point2i> neighbourPoints) {
   double resultVariance = 0;
   double variance = 0;
   for(int i =0; i<neighbourPoints.size();i++) {
-    double v = image.at<uchar>(neighbourPoints[i])- mean;
+    double v = image.at<uchar>(neighbourPoints[i]) - mean;
     resultVariance += v*v;
   }
   variance = resultVariance/neighbourPoints.size();
@@ -69,7 +69,7 @@ std::vector< std::vector<double> >  getCorrspondingVariance(Mat image) {
       vector<Point2i> neighbourPoints= getneighbourhood(image, i,j);
       double mean= getMean(image,neighbourPoints);
       double variance = getVariance(image,mean,neighbourPoints);
-      std::cout << "/* My Mean */" << mean << " myVariance: " << variance << '\n';
+      // std::cout << "/* My Mean */" << mean << " myVariance: " << variance << '\n';
       varianceVector.push_back(variance);
     }
     v.push_back(varianceVector);
