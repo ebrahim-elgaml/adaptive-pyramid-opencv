@@ -96,11 +96,33 @@ void pyramidAlgorithm(Mat img) {
       }
     }
   }
+  for(int i = 0; i < nodes.size(); i++){
+    for(int j =0; j<nodes[i].size(); j++){
+      if(nodes[i][j].isDead){
+        nodes[i][j].createLink(img, nodes);
+      }
+    }
+  }
+
+  for(int i = 0; i < nodes.size(); i++){
+    for(int j =0; j<nodes[i].size(); j++){
+      if(nodes[i][j].hasParent()){
+        std::cout << "/*PARENT */" << '\n';
+        Point2i p = nodes[i][j].parentNodePoint;
+        nodes[p.y][p.x].print();
+        // std::cout << "/* message */" <<  << '\n';
+        // std::cout << nodes[i][j].parentNode << '\n';
+        std::cout << "/*PARENT */" << '\n';
+
+      }
+    }
+  }
+
   std::cout << "/* message */" << continueIteration(nodes) << '\n';
 
   // nodes[0][0].decide(img, nodes);
   printVectorOfVectores(nodes);
-  
+
   std::cout << "/* message */" << nodes[4][4].x << '\n';
 }
 
