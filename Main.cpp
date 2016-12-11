@@ -38,7 +38,8 @@ std::vector< std::vector<double> >  getCorrspondingVariance(Mat image) {
     for(int j=0;j<image.cols;j++) {
       vector<Point2i> neighbourPoints = getneighbourhood(image, i, j);
       double mean= getMean(image, neighbourPoints);
-      double variance = getVariance(image, mean, neighbourPoints);
+      // double variance = getVariance(image, mean, neighbourPoints);//TODO remove FOr testing only
+      double variance = image.at<uchar>(i, j);
       varianceVector.push_back(variance);
     }
     v.push_back(varianceVector);
@@ -110,27 +111,22 @@ void pyramidAlgorithm(Mat img) {
         std::cout << "/*PARENT */" << '\n';
         Point2i p = nodes[i][j].parentNodePoint;
         nodes[p.y][p.x].print();
-        // std::cout << "/* message */" <<  << '\n';
-        // std::cout << nodes[i][j].parentNode << '\n';
         std::cout << "/*PARENT */" << '\n';
-
       }
     }
   }
 
-  std::cout << "/* message */" << continueIteration(nodes) << '\n';
 
   // nodes[0][0].decide(img, nodes);
   printVectorOfVectores(nodes);
 
-  std::cout << "/* message */" << nodes[4][4].x << '\n';
 }
 
 int main( int argc, char** argv )
 {
     std::cout << "/* Hello CV */" << '\n';
     // Mat image = imread("./images/L1.jpg", 1);
-    Mat image = (Mat_<uchar>(5,5) << 42, 43, 43, 44, 45, 43, 43, 44, 45, 45, 44, 44, 45, 46, 46, 44, 45, 46, 46, 47, 45, 46, 46, 47, 48);
+    Mat image = (Mat_<uchar>(5,5) << 12, 8, 7, 3, 6, 7, 9, 4, 2, 6, 4, 6, 3, 6, 1, 9, 4, 3, 7, 4, 8, 8, 7, 6, 2);
     pyramidAlgorithm(image);
     std::cout << '\n';
     printf("DONE\n");
