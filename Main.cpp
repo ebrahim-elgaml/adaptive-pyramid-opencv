@@ -7,41 +7,10 @@
 #include <math.h>
 #include<fstream>
 #include<dirent.h>
+#include "Debugging.cpp"
 using namespace std;
 using namespace cv;
 
-std::vector<Point2i> getneighbourhood(Mat image, int y, int x){
-  vector<Point2i> neighbourPoints;
-  double x1 = x-1;
-  double x2 = x+1;
-  double y1 = y-1;
-  double y2 = y+1;
-  if(x1 >= 0 && y1 >= 0){
-    neighbourPoints.push_back(Point2i(x1,y1));
-  }
-  if(y1 >=0) {
-    neighbourPoints.push_back(Point2i(x,y1));
-  }
-  if(x2 < image.cols && y1 >=0) {
-    neighbourPoints.push_back(Point2i(x2,y1));
-  }
-  if(x1 >= 0) {
-    neighbourPoints.push_back(Point2i(x1,y));
-  }
-  if(x2 < image.cols) {
-    neighbourPoints.push_back(Point2i(x2,y));
-  }
-  if(x1 >=0 && y2 < image.rows) {
-    neighbourPoints.push_back(Point2i(x1,y2));
-  }
-  if(y2 < image.rows) {
-    neighbourPoints.push_back(Point2i(x,y2));
-  }
-  if(x2 < image.cols && y2 < image.rows) {
-    neighbourPoints.push_back(Point2i(x2,y2));
-  }
-    return neighbourPoints;
-}
 double getMean(Mat image,vector<Point2i> neighbourPoints) {
   double sum =0;
   for(int i=0;i<neighbourPoints.size();i++){
@@ -50,6 +19,7 @@ double getMean(Mat image,vector<Point2i> neighbourPoints) {
   double mean = sum/neighbourPoints.size();
   return mean;
 }
+
 double getVariance(Mat image,int mean, vector<Point2i> neighbourPoints) {
   double resultVariance = 0;
   double variance = 0;
@@ -63,13 +33,12 @@ double getVariance(Mat image,int mean, vector<Point2i> neighbourPoints) {
 
 std::vector< std::vector<double> >  getCorrspondingVariance(Mat image) {
   std::vector< std::vector<double> > v;
-  for(int i=0;i<image.rows;i++){
+  for(int i=0; i<image.rows; i++){
     std::vector<double> varianceVector;
     for(int j=0;j<image.cols;j++) {
-      vector<Point2i> neighbourPoints= getneighbourhood(image, i,j);
-      double mean= getMean(image,neighbourPoints);
-      double variance = getVariance(image,mean,neighbourPoints);
-      // std::cout << "/* My Mean */" << mean << " myVariance: " << variance << '\n';
+      vector<Point2i> neighbourPoints = getneighbourhood(image, i, j);
+      double mean= getMean(image, neighbourPoints);
+      double variance = getVariance(image, mean, neighbourPoints);
       varianceVector.push_back(variance);
     }
     v.push_back(varianceVector);
@@ -78,11 +47,11 @@ std::vector< std::vector<double> >  getCorrspondingVariance(Mat image) {
 }
 std::vector< std::vector<double> >  getCorrspondingMean(Mat image) {
   std::vector< std::vector<double> > m;
-  for(int i=0;i<image.rows;i++){
-    std::vector< std::vector<double> > meanVector;
+  for(int i=0; i<image.rows; i++){
+    std::vector<double> meanVector;
     for(int j=0;j<image.cols;j++) {
       vector<Point2i> neighbourPoints= getneighbourhood(image, i,j);
-      double mean= getMean(image,neighbourPoints);
+      double mean= getMean(image, neighbourPoints);
       meanVector.push_back(mean);
     }
       m.push_back(meanVector);
@@ -90,23 +59,59 @@ std::vector< std::vector<double> >  getCorrspondingMean(Mat image) {
   return m;
 }
 
-void printVectorOfVectores(std::vector< std::vector<double> > v) {
-  for( int i = 0; i< v.size(); ++i){
-    for (int j = 0; j < v[i].size(); j++) {
-      std::cout << "" << v[i][j] << ", ";
+std::vector< std::vector<Node> > initNodes(Mat img) {
+  std::vector< std::vector<double> > variances = getCorrspondingVariance(img);
+  std::vector< std::vector<double> > means = getCorrspondingMean(img);
+  std::vector< std::vector<Node> > result;
+  for (int i = 0; i < img.rows; i++) {
+    std::vector<Node> v;
+    for(int j = 0; j < img.cols; j++) {
+      Node n;
+      n.variance = variances[i][j];
+      n.mean = means[i][j];
+      n.x = j; n.y = i;
+      v.push_back(n);
     }
-    std::cout << '\n';
+    result.push_back(v);
   }
+  return result;
 }
+
+bool continueIteration(std::vector< std::vector<Node> > nodes){
+  for(int i = 0; i<nodes.size(); i++){
+    for(int j = 0; j<nodes[i].size(); j++){
+      if(!nodes[i][j].isMarked()) return true;
+    }
+  }
+  return false;
+}
+void pyramidAlgorithm(Mat img) {
+  std::vector< std::vector<Node> > nodes = initNodes(img);
+  printVectorOfVectores(nodes);
+  std::cout << "/* message */" << continueIteration(nodes) << '\n';
+  while(continueIteration(nodes)) {
+    for(int i = 0; i<nodes.size(); i++){
+      for(int j = 0; j<nodes[i].size(); j++){
+        nodes[i][j].decide(img, nodes);
+      }
+    }
+  }
+  std::cout << "/* message */" << continueIteration(nodes) << '\n';
+
+  // nodes[0][0].decide(img, nodes);
+  printVectorOfVectores(nodes);
+  
+  std::cout << "/* message */" << nodes[4][4].x << '\n';
+}
+
 int main( int argc, char** argv )
 {
     std::cout << "/* Hello CV */" << '\n';
-
-    printf("DONE\n");
     // Mat image = imread("./images/L1.jpg", 1);
     Mat image = (Mat_<uchar>(5,5) << 42, 43, 43, 44, 45, 43, 43, 44, 45, 45, 44, 44, 45, 46, 46, 44, 45, 46, 46, 47, 45, 46, 46, 47, 48);
-    printVectorOfVectores(getCorrspondingVariance(image));
-
+    pyramidAlgorithm(image);
+    std::cout << '\n';
+    printf("DONE\n");
     waitKey();
     return 0;
 }
