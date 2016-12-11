@@ -69,12 +69,15 @@ vector<Node> Node::getSurvivingNodes(Mat img, std::vector< std::vector<Node> > &
 void Node::createLink(Mat img, std::vector< std::vector<Node> > & nodes) {
   vector<Node> survivingNodes = getSurvivingNodes(img,nodes);
   double diff = 0;
-  double min = -1;
   Node leastNode;
+  // std::cout << "/* message */" <<  survivingNodes.size() << '\n';
+
   if(survivingNodes.size() == 1) {
     parentNodePoint = Point2i(survivingNodes[0].x, survivingNodes[0].y);
     return;
   }
+  double min = abs(variance - survivingNodes[0].variance);
+
   for(int i=0; i<survivingNodes.size(); i++) {
     double diff = variance - survivingNodes[i].variance;
     if(abs(diff) < min) {
@@ -90,7 +93,7 @@ bool Node::hasParent(){
 void Node::print() {
   // std::cout << "(At x: " << x << ",y: " << y <<")";
 
-  std::cout << "(isSurvived: " << isSurvived << ", isDead: " << isDead << ", v: " << variance << ", m: " << mean << "At x: " << x << ",y: " << y <<")";
+  std::cout << "(S: " << isSurvived << ", D: " << isDead << ", v: " << variance << ", m: " << mean << ", x: " << x << ",y: " << y <<")";
 }
 std::vector<Point2i> getneighbourhood(Mat image, int y, int x){
   vector<Point2i> neighbourPoints;

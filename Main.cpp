@@ -37,7 +37,7 @@ std::vector< std::vector<double> >  getCorrspondingVariance(Mat image) {
     std::vector<double> varianceVector;
     for(int j=0;j<image.cols;j++) {
       vector<Point2i> neighbourPoints = getneighbourhood(image, i, j);
-      double mean= getMean(image, neighbourPoints);
+      double mean = getMean(image, neighbourPoints);
       // double variance = getVariance(image, mean, neighbourPoints);//TODO remove FOr testing only
       double variance = image.at<uchar>(i, j);
       varianceVector.push_back(variance);
@@ -88,8 +88,6 @@ bool continueIteration(std::vector< std::vector<Node> > nodes){
 }
 void pyramidAlgorithm(Mat img) {
   std::vector< std::vector<Node> > nodes = initNodes(img);
-  printVectorOfVectores(nodes);
-  std::cout << "/* message */" << continueIteration(nodes) << '\n';
   while(continueIteration(nodes)) {
     for(int i = 0; i<nodes.size(); i++){
       for(int j = 0; j<nodes[i].size(); j++){
@@ -104,21 +102,8 @@ void pyramidAlgorithm(Mat img) {
       }
     }
   }
-
-  for(int i = 0; i < nodes.size(); i++){
-    for(int j =0; j<nodes[i].size(); j++){
-      if(nodes[i][j].hasParent()){
-        std::cout << "/*PARENT */" << '\n';
-        Point2i p = nodes[i][j].parentNodePoint;
-        nodes[p.y][p.x].print();
-        std::cout << "/*PARENT */" << '\n';
-      }
-    }
-  }
-
-
   // nodes[0][0].decide(img, nodes);
-  printVectorOfVectores(nodes);
+  // printVectorOfVectores(nodes);
 
 }
 
