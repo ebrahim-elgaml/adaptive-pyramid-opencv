@@ -17,24 +17,25 @@ class Node {
     bool isSurvived, isDead;
     double variance, mean;
     int x, y;// x colsm y rows
+    Node *parentNode;
     Node ();
     bool isMarked();
     void print();
     void decide(Mat, std::vector< std::vector<Node> > &);
+    vector<Node> getSurvivingNodes(Mat, std::vector< std::vector<Node> > &);
+    void createLink(Mat, std::vector< std::vector<Node> > &);
 };
 
 Node::Node(){
   isSurvived = false;
   isDead = false;
+  parentNode = 0;
 }
 bool Node::isMarked() {
   return isSurvived || isDead;
 }
 void Node::decide(Mat img, std::vector< std::vector<Node> > &nodes){
   vector<Point2i> neighbourPoints = getneighbourhood(img, y, x);
-  bool isLessThanAll;
-  double minVariance = variance;
-  int minIndex;
   if(isMarked()) {
     return;
   }
@@ -53,6 +54,37 @@ void Node::decide(Mat img, std::vector< std::vector<Node> > &nodes){
     nodes[y][x].isDead = true;
   }
 }
+// TODO get all surviving nodes
+vector<Node> Node::getSurvivingNodes(Mat img, std::vector< std::vector<Node> > & nodes) {
+  vector<Point2i> neighbourPoints = getneighbourhood(img, y, x);
+  vector<Node> survivingNodes;
+  for(int i = 0; i < neighbourPoints.size(); i++) {
+    int x = neighbourPoints[i].x;
+    int y = neighbourPoints[i].y;
+    if (nodes[y][x].isSurvived) survivingNodes.push_back(nodes[y][x]);
+  }
+  return survivingNodes;
+}
+void Node::createLink(Mat img, std::vector< std::vector<Node> > & nodes) {
+  vector<Node> survivingNodes = getSurvivingNodes(img,nodes);
+  double diff = 0;
+  double min = -1;
+  Node leastNode;
+  if(survivingNodes.size() == 1) {
+    parentNode = &survivingNodes[0];
+    return;
+  }
+  for(int i=0; i<survivingNodes.size(); i++) {
+    double diff = variance - survivingNodes[i].variance;
+    if(abs(diff) < min) {
+      min = diff;
+      leastNode= survivingNodes[i];
+    }
+  }
+  parentNode = &leastNode;
+}
+
+
 void Node::print() {
   std::cout << "(isSurvived: " << isSurvived << ", isDead: " << isDead << ", v: " << variance << ", m: " << mean << "At x: " << x << ",y: " << y <<")";
 }
