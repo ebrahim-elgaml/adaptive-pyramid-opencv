@@ -70,8 +70,8 @@ std::vector< std::vector<Node> > initNodes(Mat img) {
       Node n;
       n.variance = variances[i][j];
       n.mean = means[i][j];
-      n.x = j; n.y = i;
-      n.neighbours = getneighbourhood(img, n.y, n.x);
+      n.loc = Point2i(j, i);
+      n.neighbours = getneighbourhood(img, n.loc.y, n.loc.x);
       v.push_back(n);
     }
     result.push_back(v);
@@ -100,6 +100,13 @@ void pyramidAlgorithm(Mat img) {
     for(int j =0; j<nodes[i].size(); j++){
       if(nodes[i][j].isDead){
         nodes[i][j].createLink(img, nodes);
+      }
+    }
+  }
+  for(int i = 0; i < nodes.size(); i++){
+    for(int j =0; j<nodes[i].size(); j++){
+      if(nodes[i][j].isSurvived){
+        nodes[i][j].linkSurvivors(nodes);
       }
     }
   }

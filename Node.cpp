@@ -11,27 +11,28 @@ using namespace std;
 using namespace cv;
 
 std::vector<Point2i> getneighbourhood(Mat, int, int);
-
+bool checkPoint(Point2i, std::vector<Point2i>);
 class Node {
   public:
     bool isSurvived, isDead;
     double variance, mean;
-    int x, y;// x cols, y rows
-    Point2i parentNodePoint;
+    Point2i loc;
+    Point2i bestSurvivor;
     std::vector<Point2i> neighbours;
     Node ();
     bool isMarked();
     void print();
     void decide(Mat, std::vector< std::vector<Node> > &);
-    vector<Node> getSurvivingNodes(Mat, std::vector< std::vector<Node> > &);
+    vector<Node> getSurvivingNodes(std::vector< std::vector<Node> > &);
     void createLink(Mat, std::vector< std::vector<Node> > &);
     bool hasParent();
+    void linkSurvivors(std::vector< std::vector<Node> > &);
 };
 
 Node::Node(){
   isSurvived = false;
   isDead = false;
-  parentNodePoint = Point2i(-1, -1);
+  bestSurvivor = Point2i(-1, -1);
 }
 bool Node::isMarked() {
   return isSurvived || isDead;
@@ -57,7 +58,7 @@ void Node::decide(Mat img, std::vector< std::vector<Node> > &nodes){
   }
 }
 
-vector<Node> Node::getSurvivingNodes(Mat img, std::vector< std::vector<Node> > & nodes) {
+vector<Node> Node::getSurvivingNodes(std::vector< std::vector<Node> > & nodes) {
   vector<Point2i> neighbourPoints = neighbours;
   vector<Node> survivingNodes;
   for(int i = 0; i < neighbourPoints.size(); i++) {
@@ -68,31 +69,60 @@ vector<Node> Node::getSurvivingNodes(Mat img, std::vector< std::vector<Node> > &
   return survivingNodes;
 }
 void Node::createLink(Mat img, std::vector< std::vector<Node> > & nodes) {
-  vector<Node> survivingNodes = getSurvivingNodes(img,nodes);
+  vector<Node> survivingNodes = getSurvivingNodes(nodes);
   Node leastNode;
 
   if(survivingNodes.size() == 1) {
-    parentNodePoint = Point2i(survivingNodes[0].x, survivingNodes[0].y);
+    bestSurvivor = Point2i(survivingNodes[0].loc.x, survivingNodes[0].loc.y);
     return;
   }
-  double min = abs(mean - survivingNodes[0].mean);
-
+  //TODO change variance with mean for testing only
+  double min = abs(variance - survivingNodes[0].variance);
+  leastNode = survivingNodes[0];
   for(int i=0; i<survivingNodes.size(); i++) {
-    double diff = mean - survivingNodes[i].mean;
+    double diff = variance - survivingNodes[i].variance;
     if(abs(diff) < min) {
       min = diff;
       leastNode= survivingNodes[i];
     }
   }
-  if(min != -1) parentNodePoint = Point2i(leastNode.x, leastNode.y);
+  bestSurvivor = Point2i(leastNode.loc.x, leastNode.loc.y);
 }
 bool Node::hasParent(){
-  return parentNodePoint.x != -1 && parentNodePoint.y!=-1;
+  return bestSurvivor.x != -1 && bestSurvivor.y!=-1;
+}
+void Node::linkSurvivors(std::vector< std::vector<Node> > & nodes){
+  if(isDead) return;
+  vector<Point2i> points;
+  for(int i =0; i<neighbours.size();i++) {
+    int x = neighbours[i].x;
+    int y = neighbours[i].y;
+    if(nodes[y][x].bestSurvivor.x == loc.x && nodes[y][x].bestSurvivor.y == loc.y){
+      std::vector<Node> survivingNodes =  nodes[y][x].getSurvivingNodes(nodes);
+
+      for(int j =0; j < survivingNodes.size(); j++){
+        Point2i p = Point2i(survivingNodes[j].loc.x, survivingNodes[j].loc.y);
+        // std::cout << "current point" << Point2i(x, y) << "<>" << p <<'\n';
+        if(!(p.x == loc.x && p.y == loc.y) && checkPoint(p, points) == 0){
+            points.push_back(p);
+        }
+      }
+    }
+  }
+  neighbours.clear();
+  neighbours.insert(neighbours.end(), points.begin(), points.end());
+  std::cout << checkPoint(Point2i(4, 2), points) << '\n';
+  for(int i = 0 ; i < points.size(); ++i){
+    std::cout << "current point" << loc << "<>" << nodes[points[i].y][points[i].x].loc <<'\n';
+
+    // std::cout << neighbours[i] << " ";
+  }
+  std::cout << "DONEEE" << '\n';
 }
 void Node::print() {
   // std::cout << "(At x: " << x << ",y: " << y <<")";
 
-  std::cout << "(S: " << isSurvived << ", D: " << isDead << ", v: " << variance << ", m: " << mean << ", x: " << x << ",y: " << y <<")";
+  std::cout << "(S: " << isSurvived << ", D: " << isDead << ", v: " << variance << ", m: " << mean << ", p: " << loc <<")";
 }
 std::vector<Point2i> getneighbourhood(Mat image, int y, int x){
   vector<Point2i> neighbourPoints;
@@ -106,4 +136,9 @@ std::vector<Point2i> getneighbourhood(Mat image, int y, int x){
   if(y2 < image.rows) neighbourPoints.push_back(Point2i(x,y2));
   if(x2 < image.cols && y2 < image.rows) neighbourPoints.push_back(Point2i(x2,y2));
   return neighbourPoints;
+}
+bool checkPoint(Point2i p, std::vector<Point2i> v) {
+  for(int i=0;i<v.size();i++)
+    if(v[i].x == p.x && v[i].y == p.y) return true;
+  return false;
 }
