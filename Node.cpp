@@ -27,6 +27,7 @@ class Node {
     void createLink(Mat, std::vector< std::vector<Node> > &);
     bool hasParent();
     void linkSurvivors(std::vector< std::vector<Node> > &);
+    void addNeighbour(Point2i);
 };
 
 Node::Node(){
@@ -94,43 +95,52 @@ bool Node::hasParent(){
 void Node::linkSurvivors(std::vector< std::vector<Node> > & nodes){
   if(isDead) return;
   vector<Point2i> points;
-  // std::cout << "BASE POINT" << loc  <<'\n';
-
   for(int i =0; i<neighbours.size();i++) {
     int x = neighbours[i].x;
     int y = neighbours[i].y;
+
     if(nodes[y][x].bestSurvivor.x == loc.x && nodes[y][x].bestSurvivor.y == loc.y){
       std::vector<Point2i> currentNeighbours =  nodes[y][x].neighbours;
       for(int j =0; j < currentNeighbours.size(); j++){
         Point2i p = Point2i(currentNeighbours[j].x, currentNeighbours[j].y);
-        // std::cout << "current point" << Point2i(x, y) << "<>" << p <<'\n';
-        // std::cout << p << '-';
-        if(!(p.x == loc.x && p.y == loc.y) && !checkPoint(p, points)){
-          if(nodes[p.y][p.x].isSurvived){
-            points.push_back(p);
-          }else{
-            points.push_back(nodes[p.y][p.x].bestSurvivor);
-          }
+        Point2i newPoint;
+        if(nodes[p.y][p.x].isSurvived){
+          newPoint = p;
+        } else {
+          newPoint = nodes[p.y][p.x].bestSurvivor;
+        }
+        if(newPoint.x != loc.x || newPoint.y != loc.y){
+          if(!checkPoint(newPoint, points)) points.push_back(newPoint);
         }
       }
-      // std::cout << "/* NEW */" << '\n';
-
     }
   }
   neighbours.clear();
   neighbours.insert(neighbours.end(), points.begin(), points.end());
-  std::cout << checkPoint(Point2i(4, 2), points) << '\n';
-  for(int i = 0 ; i < points.size(); ++i){
-      std::cout << "current point" << loc << "<>" << nodes[points[i].y][points[i].x].loc <<'\n';
-
-    // std::cout << neighbours[i] << " ";
+}
+void Node::addNeighbour(Point2i p){
+  for(int i = 0 ; i < neighbours.size(); i++){
+    if(neighbours[i].x == p.x && neighbours[i].y == p.y) return;
   }
-  std::cout << "DONEEE" << '\n';
+  neighbours.push_back(p);
 }
 void Node::print() {
-  // std::cout << "(At x: " << x << ",y: " << y <<")";
-
   std::cout << "(S: " << isSurvived << ", D: " << isDead << ", v: " << variance << ", m: " << mean << ", p: " << loc <<")";
+}
+
+void stablizeNodes(std::vector< std::vector<Node> > & nodes) {
+  for(int i=0; i< nodes.size(); i++){
+    for(int j =0; j< nodes[i].size(); j++){
+      if(nodes[i][j].isSurvived){
+        std::vector<Point2i> points = nodes[i][j].neighbours;
+        for(int k = 0 ; k<points.size(); k++){
+          if(points[k].x != nodes[i][j].loc.x || points[k].y != nodes[i][j].loc.y){
+            nodes[points[k].y][points[k].x].addNeighbour(nodes[i][j].loc);
+          }
+        }
+      }
+    }
+  }
 }
 std::vector<Point2i> getneighbourhood(Mat image, int y, int x){
   vector<Point2i> neighbourPoints;
@@ -146,7 +156,7 @@ std::vector<Point2i> getneighbourhood(Mat image, int y, int x){
   return neighbourPoints;
 }
 bool checkPoint(Point2i p, std::vector<Point2i> v) {
-  for(int i=0;i<v.size();i++)
+  for(int i=0; i<v.size(); i++)
     if(v[i].x == p.x && v[i].y == p.y) return true;
   return false;
 }
