@@ -29,6 +29,10 @@ class Node {
     void linkSurvivors(std::vector< std::vector<Node> > &);
     void addNeighbour(Point2i);
     void decideRoot();
+    void updateMean(std::vector< std::vector<Node> > &);
+    void updateVariance(Mat,std::vector< std::vector<Node> > &);
+
+
 };
 
 Node::Node(){
@@ -128,6 +132,30 @@ void Node::addNeighbour(Point2i p){
 void Node::decideRoot() {
   if(isSurvived) return;
 
+}
+void Node::updateMean(std::vector< std::vector<Node> > & nodes) {
+  double mean = 0;
+  double result = 0;
+  for(int i = 0; i<neighbours.size();i++) {
+    int x = neighbours[i].x;
+    int y= neighbours[i].y;
+    mean += nodes[y][x].mean;
+  }
+  result = mean/neighbours.size();
+  mean = result;
+}
+void Node::updateVariance(Mat image,std::vector< std::vector<Node> > & nodes) {
+  double rVariance = 0;
+  double resVariance = 0;
+  for(int i =0;i<neighbours.size();i++) {
+    int x = neighbours[i].x;
+    int y= neighbours[i].y;
+    double newMean = nodes[y][x].mean;
+    double variance = image.at<uchar>(neighbours[i]) - newMean;
+    rVariance+= variance*variance;
+  }
+  resVariance = rVariance/neighbours.size();
+  variance = resVariance;
 }
 void Node::print() {
   std::cout << "(S: " << isSurvived << ", D: " << isDead << ", v: " << variance << ", m: " << mean << ", p: " << loc <<")";
