@@ -28,7 +28,8 @@ class Node {
     bool hasParent();
     void linkSurvivors(std::vector< std::vector<Node> > &);
     void addNeighbour(Point2i);
-    void decideRoot();
+    void decideRoot(vector< vector<Node> > &, double, double, double);
+    int getNoOfChildren(vector< vector<Node> > &);
 };
 
 Node::Node(){
@@ -125,9 +126,34 @@ void Node::addNeighbour(Point2i p){
   }
   neighbours.push_back(p);
 }
-void Node::decideRoot() {
+void Node::decideRoot(vector< vector<Node> > & nodes, double minContrast, double minSize, double alpha) {
   if(isSurvived) return;
+  Node parentNode = nodes[bestSurvivor.y][bestSurvivor.x];
+  double diff = abs(mean - parentNode.mean);
+  int x = parentNode.getNoOfChildren(nodes);
+  double S;
+  if(x > minSize){
+    S = minContrast;
+  } else {
+    S = minContrast * exp(alpha*(minSize - x));
+  }
+  if(diff > S) {
+    isRoot = true;
+  }
 
+}
+
+int Node::getNoOfChildren(vector< vector<Node> > & nodes) {
+  if(isDead) return 0;
+  int sum =0;
+  for(int i =0; i  < nodes.size(); i++){
+    for(int j =0; j <nodes[i].size(); j++){
+      if(nodes[i][j].isDead && nodes[i][j].bestSurvivor.x == loc.x && nodes[i][j].bestSurvivor.y == loc.y){
+        sum++;
+      }
+    }
+  }
+  return sum;
 }
 void Node::print() {
   std::cout << "(S: " << isSurvived << ", D: " << isDead << ", v: " << variance << ", m: " << mean << ", p: " << loc <<")";
