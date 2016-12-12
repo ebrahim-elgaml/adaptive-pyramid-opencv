@@ -94,26 +94,34 @@ bool Node::hasParent(){
 void Node::linkSurvivors(std::vector< std::vector<Node> > & nodes){
   if(isDead) return;
   vector<Point2i> points;
+  // std::cout << "BASE POINT" << loc  <<'\n';
+
   for(int i =0; i<neighbours.size();i++) {
     int x = neighbours[i].x;
     int y = neighbours[i].y;
     if(nodes[y][x].bestSurvivor.x == loc.x && nodes[y][x].bestSurvivor.y == loc.y){
-      std::vector<Node> survivingNodes =  nodes[y][x].getSurvivingNodes(nodes);
-
-      for(int j =0; j < survivingNodes.size(); j++){
-        Point2i p = Point2i(survivingNodes[j].loc.x, survivingNodes[j].loc.y);
+      std::vector<Point2i> currentNeighbours =  nodes[y][x].neighbours;
+      for(int j =0; j < currentNeighbours.size(); j++){
+        Point2i p = Point2i(currentNeighbours[j].x, currentNeighbours[j].y);
         // std::cout << "current point" << Point2i(x, y) << "<>" << p <<'\n';
-        if(!(p.x == loc.x && p.y == loc.y) && checkPoint(p, points) == 0){
+        // std::cout << p << '-';
+        if(!(p.x == loc.x && p.y == loc.y) && !checkPoint(p, points)){
+          if(nodes[p.y][p.x].isSurvived){
             points.push_back(p);
+          }else{
+            points.push_back(nodes[p.y][p.x].bestSurvivor);
+          }
         }
       }
+      // std::cout << "/* NEW */" << '\n';
+
     }
   }
   neighbours.clear();
   neighbours.insert(neighbours.end(), points.begin(), points.end());
   std::cout << checkPoint(Point2i(4, 2), points) << '\n';
   for(int i = 0 ; i < points.size(); ++i){
-    std::cout << "current point" << loc << "<>" << nodes[points[i].y][points[i].x].loc <<'\n';
+      std::cout << "current point" << loc << "<>" << nodes[points[i].y][points[i].x].loc <<'\n';
 
     // std::cout << neighbours[i] << " ";
   }

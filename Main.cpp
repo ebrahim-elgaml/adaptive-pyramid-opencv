@@ -96,13 +96,26 @@ void pyramidAlgorithm(Mat img) {
       }
     }
   }
+  // printMeans(nodes);
   for(int i = 0; i < nodes.size(); i++){
     for(int j =0; j<nodes[i].size(); j++){
       if(nodes[i][j].isDead){
         nodes[i][j].createLink(img, nodes);
+        // std::cout <<  Point2i(j, i)<< " connected to : " << nodes[i][j].bestSurvivor << '\n';
       }
     }
   }
+
+  // for(int i = 0; i < nodes.size(); i++){
+  //   for(int j =0; j<nodes[i].size(); j++){
+  //     std::cout <<  Point2i(j, i)<< " Neghbours to : ";
+  //     for(int k =0; k<nodes[i][j].neighbours.size(); ++k){
+  //       std::cout << nodes[i][j].neighbours[k] << "-" ;
+  //     }
+  //     std::cout << "/* message */" << '\n';
+  //   }
+  // }
+
   for(int i = 0; i < nodes.size(); i++){
     for(int j =0; j<nodes[i].size(); j++){
       if(nodes[i][j].isSurvived){
