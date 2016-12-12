@@ -16,8 +16,9 @@ class Node {
   public:
     bool isSurvived, isDead;
     double variance, mean;
-    int x, y;// x colsm y rows
+    int x, y;// x cols, y rows
     Point2i parentNodePoint;
+    std::vector<Point2i> neighbours;
     Node ();
     bool isMarked();
     void print();
@@ -36,7 +37,7 @@ bool Node::isMarked() {
   return isSurvived || isDead;
 }
 void Node::decide(Mat img, std::vector< std::vector<Node> > &nodes){
-  vector<Point2i> neighbourPoints = getneighbourhood(img, y, x);
+  vector<Point2i> neighbourPoints = neighbours;
   if(isMarked()) {
     return;
   }
@@ -57,7 +58,7 @@ void Node::decide(Mat img, std::vector< std::vector<Node> > &nodes){
 }
 
 vector<Node> Node::getSurvivingNodes(Mat img, std::vector< std::vector<Node> > & nodes) {
-  vector<Point2i> neighbourPoints = getneighbourhood(img, y, x);
+  vector<Point2i> neighbourPoints = neighbours;
   vector<Node> survivingNodes;
   for(int i = 0; i < neighbourPoints.size(); i++) {
     int x = neighbourPoints[i].x;
@@ -68,18 +69,16 @@ vector<Node> Node::getSurvivingNodes(Mat img, std::vector< std::vector<Node> > &
 }
 void Node::createLink(Mat img, std::vector< std::vector<Node> > & nodes) {
   vector<Node> survivingNodes = getSurvivingNodes(img,nodes);
-  double diff = 0;
   Node leastNode;
-  // std::cout << "/* message */" <<  survivingNodes.size() << '\n';
 
   if(survivingNodes.size() == 1) {
     parentNodePoint = Point2i(survivingNodes[0].x, survivingNodes[0].y);
     return;
   }
-  double min = abs(variance - survivingNodes[0].variance);
+  double min = abs(mean - survivingNodes[0].mean);
 
   for(int i=0; i<survivingNodes.size(); i++) {
-    double diff = variance - survivingNodes[i].variance;
+    double diff = mean - survivingNodes[i].mean;
     if(abs(diff) < min) {
       min = diff;
       leastNode= survivingNodes[i];

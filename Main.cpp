@@ -71,6 +71,7 @@ std::vector< std::vector<Node> > initNodes(Mat img) {
       n.variance = variances[i][j];
       n.mean = means[i][j];
       n.x = j; n.y = i;
+      n.neighbours = getneighbourhood(img, n.y, n.x);
       v.push_back(n);
     }
     result.push_back(v);
