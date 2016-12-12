@@ -14,7 +14,7 @@ std::vector<Point2i> getneighbourhood(Mat, int, int);
 bool checkPoint(Point2i, std::vector<Point2i>);
 class Node {
   public:
-    bool isSurvived, isDead;
+    bool isSurvived, isDead, isRoot;
     double variance, mean;
     Point2i loc;
     Point2i bestSurvivor;
@@ -28,6 +28,7 @@ class Node {
     bool hasParent();
     void linkSurvivors(std::vector< std::vector<Node> > &);
     void addNeighbour(Point2i);
+    void decideRoot();
 };
 
 Node::Node(){
@@ -124,6 +125,10 @@ void Node::addNeighbour(Point2i p){
   }
   neighbours.push_back(p);
 }
+void Node::decideRoot() {
+  if(isSurvived) return;
+
+}
 void Node::print() {
   std::cout << "(S: " << isSurvived << ", D: " << isDead << ", v: " << variance << ", m: " << mean << ", p: " << loc <<")";
 }
@@ -142,6 +147,7 @@ void stablizeNodes(std::vector< std::vector<Node> > & nodes) {
     }
   }
 }
+
 std::vector<Point2i> getneighbourhood(Mat image, int y, int x){
   vector<Point2i> neighbourPoints;
   double x1 = x-1;double x2 = x+1;double y1 = y-1;double y2 = y+1;

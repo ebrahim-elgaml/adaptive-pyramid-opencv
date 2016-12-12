@@ -11,15 +11,6 @@
 using namespace std;
 using namespace cv;
 
-double getMean(Mat image,vector<Point2i> neighbourPoints) {
-  double sum =0;
-  for(int i=0;i<neighbourPoints.size();i++){
-    sum+= image.at<uchar>(neighbourPoints[i]);
-  }
-  double mean = sum/neighbourPoints.size();
-  return mean;
-}
-
 double getVariance(Mat image,int mean, vector<Point2i> neighbourPoints) {
   double resultVariance = 0;
   double variance = 0;
@@ -30,14 +21,13 @@ double getVariance(Mat image,int mean, vector<Point2i> neighbourPoints) {
   variance = resultVariance/neighbourPoints.size();
   return variance;
 }
-
 std::vector< std::vector<double> >  getCorrspondingVariance(Mat image) {
   std::vector< std::vector<double> > v;
   for(int i=0; i<image.rows; i++){
     std::vector<double> varianceVector;
     for(int j=0;j<image.cols;j++) {
       vector<Point2i> neighbourPoints = getneighbourhood(image, i, j);
-      double mean = getMean(image, neighbourPoints);
+      double mean = image.at<uchar>(i, j);
       // double variance = getVariance(image, mean, neighbourPoints);//TODO remove FOr testing only
       double variance = image.at<uchar>(i, j);
       varianceVector.push_back(variance);
@@ -46,30 +36,15 @@ std::vector< std::vector<double> >  getCorrspondingVariance(Mat image) {
   }
   return v;
 }
-std::vector< std::vector<double> >  getCorrspondingMean(Mat image) {
-  std::vector< std::vector<double> > m;
-  for(int i=0; i<image.rows; i++){
-    std::vector<double> meanVector;
-    for(int j=0;j<image.cols;j++) {
-      vector<Point2i> neighbourPoints= getneighbourhood(image, i,j);
-      double mean= getMean(image, neighbourPoints);
-      meanVector.push_back(mean);
-    }
-      m.push_back(meanVector);
-  }
-  return m;
-}
-
 std::vector< std::vector<Node> > initNodes(Mat img) {
   std::vector< std::vector<double> > variances = getCorrspondingVariance(img);
-  std::vector< std::vector<double> > means = getCorrspondingMean(img);
   std::vector< std::vector<Node> > result;
   for (int i = 0; i < img.rows; i++) {
     std::vector<Node> v;
     for(int j = 0; j < img.cols; j++) {
       Node n;
       n.variance = variances[i][j];
-      n.mean = means[i][j];
+      n.mean = img.at<uchar>(i,j);
       n.loc = Point2i(j, i);
       n.neighbours = getneighbourhood(img, n.loc.y, n.loc.x);
       v.push_back(n);
