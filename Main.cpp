@@ -62,74 +62,112 @@ bool continueIteration(std::vector< std::vector<Node> > nodes){
   }
   return false;
 }
+std::vector< std::vector<Node> > getListofNodes(std::vector< std::vector<Node> > nodes) {
+  std::vector< std::vector<Node> > resultNodes;
+  for(int i=0;i<nodes.size();i++){
+    std::vector<Node> smallNodes;
+    for(int j=0;j<nodes[i].size();j++)
+      if(nodes[i][j].isSurvived){
+        nodes[i][j].clearNode();
+        smallNodes.push_back(nodes[i][j]);
+      }
+
+    resultNodes.push_back(smallNodes);
+  }
+  return resultNodes;
+}
+int countSurvivingNodes(std::vector< std::vector<Node> > nodes) {
+  int surviving = 0;
+  for(int i =0;i<nodes.size();i++) {
+    for(int j=0;j<nodes[i].size();j++){
+      if(nodes[i][j].isSurvived) surviving++;
+    }
+  }
+  return surviving;
+}
+bool shouldStop(std::vector<PyramidLevel> pyramidLevels){
+  if(pyramidLevels.size() == 1) return false;
+  PyramidLevel p1 = pyramidLevels[pyramidLevels.size() - 1];
+  PyramidLevel p2 = pyramidLevels[pyramidLevels.size() - 2];
+  if(countSurvivingNodes(p1.nodes) == countSurvivingNodes(p2.nodes) || countSurvivingNodes(p1.nodes) == 1){
+    return true;
+  }
+  return false;
+}
 void pyramidAlgorithm(Mat img, double minContrast, double minSize, double alpha) {
-  std::vector< std::vector<Node> > nodes = initNodes(img);
-  while(continueIteration(nodes)) {
-    for(int i = 0; i<nodes.size(); i++){
-      for(int j = 0; j<nodes[i].size(); j++){
-        nodes[i][j].decide(img, nodes);
-      }
-    }
-  }
-  // printMeans(nodes);
-  for(int i = 0; i < nodes.size(); i++){
-    for(int j =0; j<nodes[i].size(); j++){
-      if(nodes[i][j].isDead){
-        nodes[i][j].createLink(img, nodes);
-      }
-    }
-  }
-  for(int i = 0; i < nodes.size(); i++){
-    for(int j =0; j<nodes[i].size(); j++){
-      if(nodes[i][j].isSurvived){
-        nodes[i][j].linkSurvivors(nodes);
-      }
-    }
-  }
-  stablizeNodes(nodes);
-  for(int i = 0; i < nodes.size(); i++){
-    for(int j =0; j<nodes[i].size(); j++){
-      if(nodes[i][j].isDead){
-        nodes[i][j].decideRoot(nodes, minContrast, minSize, alpha);
-      }
-    }
-  }
+  std::vector<PyramidLevel> pyramidLevels;
+  int level = 0;
+  std::vector< std::vector<Node> > n = initNodes(img);
+  pyramidLevels.push_back(PyramidLevel(n));
 
-  // removeRoots(nodes);
-  for(int i = 0; i < nodes.size(); i++){
-    for(int j =0; j<nodes[i].size(); j++){
-      if(nodes[i][j].isSurvived){
-        nodes[i][j].updateMean(nodes);
-      }
-    }
-  }
-  for(int i = 0; i < nodes.size(); i++){
-    for(int j =0; j<nodes[i].size(); j++){
-      if(nodes[i][j].isSurvived){
-        nodes[i][j].updateVariance(nodes);
-      }
-    }
-  }
-
-  for(int i = 0; i < nodes.size(); i++){
-    for(int j =0; j<nodes[i].size(); j++){
-      if(nodes[i][j].isRoot){
-        std::cout << "ROOOT" << '\n';
-      }
-    }
-  }
-  // Test neighbours
-  for(int i = 0; i < nodes.size(); i++){
-    for(int j =0; j<nodes[i].size(); j++){
-      if(nodes[i][j].isSurvived){
-        std::cout <<  Point2i(j, i)<< " Neghbours to : ";
-        for(int k =0; k<nodes[i][j].neighbours.size(); ++k){
-          std::cout << nodes[i][j].neighbours[k] << "-" ;
+  do {
+    std::cout << "BHBK" << '\n';
+    std::vector< std::vector<Node> > nodes = pyramidLevels[level].nodes;
+    while(continueIteration(nodes)) {
+      for(int i = 0; i<nodes.size(); i++){
+        for(int j = 0; j<nodes[i].size(); j++){
+          nodes[i][j].decide(img, nodes);
         }
-        std::cout << "/* message */" << '\n';
       }
     }
-  }
+    std::cout << "/* continueIteration */" << '\n';
+    if(shouldStop(pyramidLevels)) break;
+    for(int i = 0; i < nodes.size(); i++){
+      for(int j =0; j<nodes[i].size(); j++){
+        if(nodes[i][j].isDead){
+          nodes[i][j].createLink(img, nodes);
+        }
+      }
+    }
+    for(int i = 0; i < nodes.size(); i++){
+      for(int j =0; j<nodes[i].size(); j++){
+        if(nodes[i][j].isSurvived){
+          nodes[i][j].linkSurvivors(nodes);
+        }
+      }
+    }
+    stablizeNodes(nodes);
+    for(int i = 0; i < nodes.size(); i++){
+      for(int j =0; j<nodes[i].size(); j++){
+        if(nodes[i][j].isDead){
+          nodes[i][j].decideRoot(nodes, minContrast, minSize, alpha);
+        }
+      }
+    }
+
+    // removeRoots(nodes);
+    for(int i = 0; i < nodes.size(); i++){
+      for(int j =0; j<nodes[i].size(); j++){
+        if(nodes[i][j].isSurvived){
+          nodes[i][j].updateMean(nodes);
+        }
+      }
+    }
+    for(int i = 0; i < nodes.size(); i++){
+      for(int j =0; j<nodes[i].size(); j++){
+        if(nodes[i][j].isSurvived){
+          nodes[i][j].updateVariance(nodes);
+        }
+      }
+    }
+
+    std::vector< std::vector<Node> > nNodes = getListofNodes(nodes);
+    level++;
+    pyramidLevels.push_back(PyramidLevel(nNodes));
+    // Test neighbours
+    for(int i = 0; i < nodes.size(); i++){
+      for(int j =0; j<nodes[i].size(); j++){
+        if(nodes[i][j].isSurvived){
+          std::cout <<  Point2i(j, i)<< " Neghbours to : ";
+          for(int k =0; k<nodes[i][j].neighbours.size(); ++k){
+            std::cout << nodes[i][j].neighbours[k] << "-" ;
+          }
+          std::cout << "/* message */" << '\n';
+        }
+      }
+    }
+
+  }while(true);
 
 }
 

@@ -33,6 +33,7 @@ class Node {
     int getNoOfChildren(vector< vector<Node> > &);
     void updateMean(std::vector< std::vector<Node> > &);
     void updateVariance(std::vector< std::vector<Node> > &);
+    void clearNode();
 };
 
 Node::Node(){
@@ -42,6 +43,12 @@ Node::Node(){
 }
 bool Node::isMarked() {
   return isSurvived || isDead;
+}
+void Node::clearNode(){
+  isSurvived = false;
+  isDead = false;
+  isRoot = false;
+  bestSurvivor = Point2i(-1,-1);
 }
 void Node::decide(Mat img, std::vector< std::vector<Node> > &nodes){
   vector<Point2i> neighbourPoints = neighbours;
@@ -228,23 +235,6 @@ std::vector<Point2i> getneighbourhood(Mat image, int y, int x){
   if(y2 < image.rows) neighbourPoints.push_back(Point2i(x,y2));
   if(x2 < image.cols && y2 < image.rows) neighbourPoints.push_back(Point2i(x2,y2));
   return neighbourPoints;
-}
-void removeRoots(std::vector< std::vector<Node> > & nodes){
-  for(int i=0; i< nodes.size(); i++){
-    for(int j =0; j< nodes[i].size(); j++){
-      Node n = nodes[i][j];
-      vector<Point2i> points = n.neighbours;
-      std::vector<int> toRemove;
-      for( int k=0; k<points.size(); k++){
-        if(nodes[points[k].y][points[k].x].isRoot){
-          toRemove.push_back(k);
-        }
-      }
-      // for (int k = 0; k < toRemove.size(); ++k) {
-      //   n.neighbours.erase(n.neighbours.begin() + toRemove[i]);
-      // }
-    }
-  }
 }
 bool checkPoint(Point2i p, std::vector<Point2i> v) {
   for(int i=0; i<v.size(); i++)
