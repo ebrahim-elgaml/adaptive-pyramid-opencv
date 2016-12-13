@@ -46,11 +46,19 @@ std::vector< std::vector<Node> > initNodes(Mat img) {
       n.variance = variances[i][j];
       n.mean = img.at<uchar>(i,j);
       n.loc = Point2i(j, i);
-      n.neighbours = getneighbourhood(img, n.loc.y, n.loc.x);
       v.push_back(n);
     }
     result.push_back(v);
   }
+  for(int i= 0; i<result.size(); i++){
+    for(int j =0; j<result[i].size(); j++){
+      vector<Point2i> p = getneighbourhood(img, result[i][j].loc.y, result[i][j].loc.x);
+      for(int k = 0 ;k < p.size(); k++ ){
+        result[i][j].neighbours.push_back(&result[p[k].y][p[k].x]);
+      }
+    }
+  }
+
   return result;
 }
 
@@ -81,7 +89,6 @@ void pyramidAlgorithm(Mat img, double minContrast, double minSize, double alpha)
     }
   }
   std::cout << "/* createLink */" << '\n';
-
   for(int i = 0; i < nodes.size(); i++){
     for(int j =0; j<nodes[i].size(); j++){
       if(nodes[i][j].isSurvived){
@@ -90,22 +97,8 @@ void pyramidAlgorithm(Mat img, double minContrast, double minSize, double alpha)
     }
   }
   std::cout << "/* linkSurvivors */" << '\n';
-
   stablizeNodes(nodes);
   std::cout << "/* stablizeNodes */" << '\n';
-
-  for(int i = 0; i < nodes.size(); i++){
-    for(int j =0; j<nodes[i].size(); j++){
-      if(nodes[i][j].isSurvived){
-        std::cout <<  Point2i(j, i)<< " Neghbours to : ";
-        for(int k =0; k<nodes[i][j].neighbours.size(); ++k){
-          std::cout << nodes[i][j].neighbours[k] << "-" ;
-        }
-        std::cout << "/* message */" << '\n';
-      }
-    }
-  }
-
   for(int i = 0; i < nodes.size(); i++){
     for(int j =0; j<nodes[i].size(); j++){
       if(nodes[i][j].isDead){
@@ -116,8 +109,9 @@ void pyramidAlgorithm(Mat img, double minContrast, double minSize, double alpha)
 
   std::cout << "/* decideRoot */" << '\n';
 
+  removeRootNeighbours(nodes);
+  std::cout << "/* removeRootNeighbours */" << '\n';
 
-  // removeRoots(nodes);
   for(int i = 0; i < nodes.size(); i++){
     for(int j =0; j<nodes[i].size(); j++){
       if(nodes[i][j].isSurvived){
@@ -138,7 +132,7 @@ void pyramidAlgorithm(Mat img, double minContrast, double minSize, double alpha)
       if(nodes[i][j].isSurvived){
         std::cout <<  Point2i(j, i)<< " Neghbours to : ";
         for(int k =0; k<nodes[i][j].neighbours.size(); ++k){
-          std::cout << nodes[i][j].neighbours[k] << "-" ;
+          std::cout << nodes[i][j].neighbours[k]->loc << "-" ;
         }
         std::cout << "/* message */" << '\n';
       }
