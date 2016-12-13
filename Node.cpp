@@ -64,6 +64,7 @@ void Node::decide(Mat img, std::vector< std::vector<Node> > &nodes){
   }
   // The smalles one.
   isSurvived = true;
+  std::cout << loc << "is surv" << '\n';
   for(int i = 0; i < neighbourPoints.size(); i++) {
     int x = neighbourPoints[i].x;
     int y = neighbourPoints[i].y;

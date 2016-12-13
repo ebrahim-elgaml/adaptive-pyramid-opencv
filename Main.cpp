@@ -102,65 +102,85 @@ void pyramidAlgorithm(Mat img, double minContrast, double minSize, double alpha)
 
   do {
     std::cout << "BHBK" << '\n';
-    std::vector< std::vector<Node> > nodes = pyramidLevels[level].nodes;
-    while(continueIteration(nodes)) {
-      for(int i = 0; i<nodes.size(); i++){
-        for(int j = 0; j<nodes[i].size(); j++){
-          nodes[i][j].decide(img, nodes);
+    // std::vector< std::vector<Node> > &nodes = pyramidLevels[level].nodes;
+    while(continueIteration(pyramidLevels[level].nodes)) {
+      for(int i = 0; i<pyramidLevels[level].nodes.size(); i++){
+        for(int j = 0; j<pyramidLevels[level].nodes[i].size(); j++){
+          pyramidLevels[level].nodes[i][j].decide(img, pyramidLevels[level].nodes);
         }
       }
+
+      // for(int i = 0; i<nodes.size(); i++){
+      //   for(int j = 0; j<nodes[i].size(); j++){
+      //     nodes[i][j].print();
+      //   }
+      //   std::cout << "/* message */" << '\n';
+      // }
     }
     std::cout << "/* continueIteration */" << '\n';
     if(shouldStop(pyramidLevels)) break;
-    for(int i = 0; i < nodes.size(); i++){
-      for(int j =0; j<nodes[i].size(); j++){
-        if(nodes[i][j].isDead){
-          nodes[i][j].createLink(img, nodes);
+    for(int i = 0; i < pyramidLevels[level].nodes.size(); i++){
+      for(int j =0; j<pyramidLevels[level].nodes[i].size(); j++){
+        if(pyramidLevels[level].nodes[i][j].isDead){
+          pyramidLevels[level].nodes[i][j].createLink(img, pyramidLevels[level].nodes);
         }
       }
     }
-    for(int i = 0; i < nodes.size(); i++){
-      for(int j =0; j<nodes[i].size(); j++){
-        if(nodes[i][j].isSurvived){
-          nodes[i][j].linkSurvivors(nodes);
+    for(int i = 0; i < pyramidLevels[level].nodes.size(); i++){
+      for(int j =0; j<pyramidLevels[level].nodes[i].size(); j++){
+        if(pyramidLevels[level].nodes[i][j].isSurvived){
+          pyramidLevels[level].nodes[i][j].linkSurvivors(pyramidLevels[level].nodes);
         }
       }
     }
-    stablizeNodes(nodes);
-    for(int i = 0; i < nodes.size(); i++){
-      for(int j =0; j<nodes[i].size(); j++){
-        if(nodes[i][j].isDead){
-          nodes[i][j].decideRoot(nodes, minContrast, minSize, alpha);
+    stablizeNodes(pyramidLevels[level].nodes);
+    for(int i = 0; i < pyramidLevels[level].nodes.size(); i++){
+      for(int j =0; j<pyramidLevels[level].nodes[i].size(); j++){
+        if(pyramidLevels[level].nodes[i][j].isDead){
+          pyramidLevels[level].nodes[i][j].decideRoot(pyramidLevels[level].nodes, minContrast, minSize, alpha);
         }
       }
     }
 
     // removeRoots(nodes);
-    for(int i = 0; i < nodes.size(); i++){
-      for(int j =0; j<nodes[i].size(); j++){
-        if(nodes[i][j].isSurvived){
-          nodes[i][j].updateMean(nodes);
+    for(int i = 0; i < pyramidLevels[level].nodes.size(); i++){
+      for(int j =0; j<pyramidLevels[level].nodes[i].size(); j++){
+        if(pyramidLevels[level].nodes[i][j].isSurvived){
+          pyramidLevels[level].nodes[i][j].updateMean(pyramidLevels[level].nodes);
         }
       }
     }
-    for(int i = 0; i < nodes.size(); i++){
-      for(int j =0; j<nodes[i].size(); j++){
-        if(nodes[i][j].isSurvived){
-          nodes[i][j].updateVariance(nodes);
+    for(int i = 0; i < pyramidLevels[level].nodes.size(); i++){
+      for(int j =0; j<pyramidLevels[level].nodes[i].size(); j++){
+        if(pyramidLevels[level].nodes[i][j].isSurvived){
+          pyramidLevels[level].nodes[i][j].updateVariance(pyramidLevels[level].nodes);
         }
       }
     }
 
-    std::vector< std::vector<Node> > nNodes = getListofNodes(nodes);
+    std::vector< std::vector<Node> > nNodes = getListofNodes(pyramidLevels[level].nodes);
     level++;
+    for(int i =0; i<nNodes.size();i++){
+      for(int j=0;j<nNodes[i].size();j++){
+        // std::cout << nNodes[i][j].loc << '\n';
+        nNodes[i][j].print();
+        std::cout <<  Point2i(j, i)<< " Neghbours to : ";
+        for(int k =0; k<nNodes[i][j].neighbours.size(); ++k){
+          std::cout << nNodes[i][j].neighbours[k] << "-" ;
+        }
+        std::cout << "/* message */" << '\n';
+      }
+    }
+    // std::cout << "COUNT SURV" << countSurvivingNodes(pyramidLevels[level].nodes)<< '\n'; 
+    std::cout << "COUNT New Level" << nNodes.size()<< '\n';
     pyramidLevels.push_back(PyramidLevel(nNodes));
     // Test neighbours
-    for(int i = 0; i < nodes.size(); i++){
-      for(int j =0; j<nodes[i].size(); j++){
-        if(nodes[i][j].isSurvived){
+    for(int i = 0; i < pyramidLevels[level].nodes.size(); i++){
+      for(int j =0; j<pyramidLevels[level].nodes[i].size(); j++){
+        if(pyramidLevels[level].nodes[i][j].isSurvived){
           std::cout <<  Point2i(j, i)<< " Neghbours to : ";
-          for(int k =0; k<nodes[i][j].neighbours.size(); ++k){
-            std::cout << nodes[i][j].neighbours[k] << "-" ;
+          for(int k =0; k<pyramidLevels[level].nodes[i][j].neighbours.size(); ++k){
+            std::cout << pyramidLevels[level].nodes[i][j].neighbours[k] << "-" ;
           }
           std::cout << "/* message */" << '\n';
         }
