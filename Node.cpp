@@ -146,11 +146,14 @@ void Node::decideRoot(vector< vector<Node> > & nodes, double minContrast, double
       for(int j=0; j<nodes[i].size(); j++){
         vector<Point2i> points = nodes[i][j].neighbours;
         int index = -1;
-        for(int k = 0; k<points.size(); k++){
+        for(int k = 0; k<points.size() && index == -1; k++){
           if(points[k].x == loc.x && points[k].y == loc.y){
             index = k;
-            break;
           }
+        }
+        if(index != -1) {
+          nodes[i][j].neighbours.erase(nodes[i][j].neighbours.begin() + index);
+          break;
         }
       }
     }
