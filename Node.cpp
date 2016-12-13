@@ -142,6 +142,18 @@ void Node::decideRoot(vector< vector<Node> > & nodes, double minContrast, double
     S = minContrast * exp(alpha*(minSize - x));
   }
   if(diff > S) {
+    for(int i = 0; i< nodes.size(); i++){
+      for(int j=0; j<nodes[i].size(); j++){
+        vector<Point2i> points = nodes[i][j].neighbours;
+        int index = -1;
+        for(int k = 0; k<points.size(); k++){
+          if(points[k].x == loc.x && points[k].y == loc.y){
+            index = k;
+            break;
+          }
+        }
+      }
+    }
     isRoot = true;
   }
 }
