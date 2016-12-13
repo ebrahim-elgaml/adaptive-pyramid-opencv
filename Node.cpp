@@ -33,6 +33,7 @@ class Node {
     int getNoOfChildren(vector< vector<Node> > &);
     void updateMean(std::vector< std::vector<Node> > &);
     void updateVariance(std::vector< std::vector<Node> > &);
+    vector<Point2i> getNotRootNeighbours (std::vector< std::vector<Node> > &);
 };
 
 Node::Node(){
@@ -76,17 +77,17 @@ vector<Node> Node::getSurvivingNodes(std::vector< std::vector<Node> > & nodes) {
 }
 void Node::createLink(Mat img, std::vector< std::vector<Node> > & nodes) {
   vector<Node> survivingNodes = getSurvivingNodes(nodes);
+  // std::cout << "/* message2 */" << '\n';
   Node leastNode;
 
   if(survivingNodes.size() == 1) {
     bestSurvivor = Point2i(survivingNodes[0].loc.x, survivingNodes[0].loc.y);
     return;
   }
-  //TODO change variance with mean for testing only
-  double min = abs(variance - survivingNodes[0].variance);
+  double min = abs(variance - survivingNodes[0].mean);
   leastNode = survivingNodes[0];
   for(int i=0; i<survivingNodes.size(); i++) {
-    double diff = variance - survivingNodes[i].variance;
+    double diff = mean - survivingNodes[i].mean;
     if(abs(diff) < min) {
       min = diff;
       leastNode= survivingNodes[i];
@@ -142,21 +143,6 @@ void Node::decideRoot(vector< vector<Node> > & nodes, double minContrast, double
     S = minContrast * exp(alpha*(minSize - x));
   }
   if(diff > S) {
-    for(int i = 0; i< nodes.size(); i++){
-      for(int j=0; j<nodes[i].size(); j++){
-        vector<Point2i> points = nodes[i][j].neighbours;
-        int index = -1;
-        for(int k = 0; k<points.size() && index == -1; k++){
-          if(points[k].x == loc.x && points[k].y == loc.y){
-            index = k;
-          }
-        }
-        if(index != -1) {
-          nodes[i][j].neighbours.erase(nodes[i][j].neighbours.begin() + index);
-          break;
-        }
-      }
-    }
     isRoot = true;
   }
 }
@@ -197,6 +183,15 @@ void Node::updateVariance(std::vector< std::vector<Node> > & nodes) {
   resVariance = rVariance/neighbours.size();
   variance = resVariance;
 }
+vector<Point2i> Node::getNotRootNeighbours (std::vector< std::vector<Node> > & nodes){
+  vector<Point2i> r ;
+  for(int i =0;i<neighbours.size();i++) {
+    int x = neighbours[i].x;
+    int y= neighbours[i].y;
+    if(!nodes[y][x].isRoot) r.push_back(neighbours[i]);
+  }
+  return r;
+}
 void Node::print() {
   std::cout << "(S: " << isSurvived << ", D: " << isDead << ", v: " << variance << ", m: " << mean << ", p: " << loc <<")";
 }
@@ -229,23 +224,7 @@ std::vector<Point2i> getneighbourhood(Mat image, int y, int x){
   if(x2 < image.cols && y2 < image.rows) neighbourPoints.push_back(Point2i(x2,y2));
   return neighbourPoints;
 }
-void removeRoots(std::vector< std::vector<Node> > & nodes){
-  for(int i=0; i< nodes.size(); i++){
-    for(int j =0; j< nodes[i].size(); j++){
-      Node n = nodes[i][j];
-      vector<Point2i> points = n.neighbours;
-      std::vector<int> toRemove;
-      for( int k=0; k<points.size(); k++){
-        if(nodes[points[k].y][points[k].x].isRoot){
-          toRemove.push_back(k);
-        }
-      }
-      // for (int k = 0; k < toRemove.size(); ++k) {
-      //   n.neighbours.erase(n.neighbours.begin() + toRemove[i]);
-      // }
-    }
-  }
-}
+
 bool checkPoint(Point2i p, std::vector<Point2i> v) {
   for(int i=0; i<v.size(); i++)
     if(v[i].x == p.x && v[i].y == p.y) return true;

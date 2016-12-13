@@ -28,8 +28,8 @@ std::vector< std::vector<double> >  getCorrspondingVariance(Mat image) {
     for(int j=0;j<image.cols;j++) {
       vector<Point2i> neighbourPoints = getneighbourhood(image, i, j);
       double mean = image.at<uchar>(i, j);
-      // double variance = getVariance(image, mean, neighbourPoints);//TODO remove FOr testing only
-      double variance = image.at<uchar>(i, j);
+      double variance = getVariance(image, mean, neighbourPoints);
+      // double variance = image.at<uchar>(i, j);
       varianceVector.push_back(variance);
     }
     v.push_back(varianceVector);
@@ -71,6 +71,7 @@ void pyramidAlgorithm(Mat img, double minContrast, double minSize, double alpha)
       }
     }
   }
+  std::cout << "/* message */" << '\n';
   // printMeans(nodes);
   for(int i = 0; i < nodes.size(); i++){
     for(int j =0; j<nodes[i].size(); j++){
@@ -79,6 +80,8 @@ void pyramidAlgorithm(Mat img, double minContrast, double minSize, double alpha)
       }
     }
   }
+  std::cout << "/* createLink */" << '\n';
+
   for(int i = 0; i < nodes.size(); i++){
     for(int j =0; j<nodes[i].size(); j++){
       if(nodes[i][j].isSurvived){
@@ -86,7 +89,11 @@ void pyramidAlgorithm(Mat img, double minContrast, double minSize, double alpha)
       }
     }
   }
+  std::cout << "/* linkSurvivors */" << '\n';
+
   stablizeNodes(nodes);
+  std::cout << "/* stablizeNodes */" << '\n';
+
   for(int i = 0; i < nodes.size(); i++){
     for(int j =0; j<nodes[i].size(); j++){
       if(nodes[i][j].isDead){
@@ -94,6 +101,9 @@ void pyramidAlgorithm(Mat img, double minContrast, double minSize, double alpha)
       }
     }
   }
+
+  std::cout << "/* decideRoot */" << '\n';
+
 
   // removeRoots(nodes);
   for(int i = 0; i < nodes.size(); i++){
@@ -130,7 +140,6 @@ void pyramidAlgorithm(Mat img, double minContrast, double minSize, double alpha)
       }
     }
   }
-
 }
 
 int main( int argc, char** argv )
@@ -138,8 +147,8 @@ int main( int argc, char** argv )
     std::cout << "/* Hello CV */" << '\n';
     // Mat image = imread("./images/L1.jpg", 1);
     Mat image = (Mat_<uchar>(5,5) << 12, 8, 7, 3, 6, 7, 9, 4, 2, 6, 4, 6, 3, 6, 1, 9, 4, 3, 7, 4, 8, 8, 7, 6, 2);
-    double minContrast = 2;
-    double minSize = 2;
+    double minContrast = 10;
+    double minSize = 4;
     double alpha = 0.3;
     pyramidAlgorithm(image, minContrast, minSize, alpha);
     std::cout << '\n';
