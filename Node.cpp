@@ -134,6 +134,7 @@ void Node::decideRoot(vector< vector<Node> > & nodes, double minContrast, double
   Node parentNode = nodes[bestSurvivor.y][bestSurvivor.x];
   double diff = abs(mean - parentNode.mean);
   int x = parentNode.getNoOfChildren(nodes);
+  // std::cout << x << '\n';
   double S;
   if(x > minSize){
     S = minContrast;
@@ -143,7 +144,6 @@ void Node::decideRoot(vector< vector<Node> > & nodes, double minContrast, double
   if(diff > S) {
     isRoot = true;
   }
-
 }
 
 int Node::getNoOfChildren(vector< vector<Node> > & nodes) {
@@ -225,9 +225,9 @@ void removeRoots(std::vector< std::vector<Node> > & nodes){
           toRemove.push_back(k);
         }
       }
-      for (int k = 0; k < toRemove.size(); ++k) {
-        n.neighbours.erase(n.neighbours.begin() + toRemove[i]);
-      }
+      // for (int k = 0; k < toRemove.size(); ++k) {
+      //   n.neighbours.erase(n.neighbours.begin() + toRemove[i]);
+      // }
     }
   }
 }

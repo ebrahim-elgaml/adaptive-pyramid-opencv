@@ -94,7 +94,8 @@ void pyramidAlgorithm(Mat img, double minContrast, double minSize, double alpha)
       }
     }
   }
-  removeRoots(nodes);
+
+  // removeRoots(nodes);
   for(int i = 0; i < nodes.size(); i++){
     for(int j =0; j<nodes[i].size(); j++){
       if(nodes[i][j].isSurvived){
@@ -106,6 +107,14 @@ void pyramidAlgorithm(Mat img, double minContrast, double minSize, double alpha)
     for(int j =0; j<nodes[i].size(); j++){
       if(nodes[i][j].isSurvived){
         nodes[i][j].updateVariance(nodes);
+      }
+    }
+  }
+
+  for(int i = 0; i < nodes.size(); i++){
+    for(int j =0; j<nodes[i].size(); j++){
+      if(nodes[i][j].isRoot){
+        std::cout << "ROOOT" << '\n';
       }
     }
   }
@@ -129,9 +138,9 @@ int main( int argc, char** argv )
     std::cout << "/* Hello CV */" << '\n';
     // Mat image = imread("./images/L1.jpg", 1);
     Mat image = (Mat_<uchar>(5,5) << 12, 8, 7, 3, 6, 7, 9, 4, 2, 6, 4, 6, 3, 6, 1, 9, 4, 3, 7, 4, 8, 8, 7, 6, 2);
-    double minContrast = 5;
-    double minSize = 3;
-    double alpha = 1;
+    double minContrast = 2;
+    double minSize = 2;
+    double alpha = 0.3;
     pyramidAlgorithm(image, minContrast, minSize, alpha);
     std::cout << '\n';
     printf("DONE\n");
