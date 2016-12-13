@@ -96,6 +96,18 @@ void pyramidAlgorithm(Mat img, double minContrast, double minSize, double alpha)
 
   for(int i = 0; i < nodes.size(); i++){
     for(int j =0; j<nodes[i].size(); j++){
+      if(nodes[i][j].isSurvived){
+        std::cout <<  Point2i(j, i)<< " Neghbours to : ";
+        for(int k =0; k<nodes[i][j].neighbours.size(); ++k){
+          std::cout << nodes[i][j].neighbours[k] << "-" ;
+        }
+        std::cout << "/* message */" << '\n';
+      }
+    }
+  }
+
+  for(int i = 0; i < nodes.size(); i++){
+    for(int j =0; j<nodes[i].size(); j++){
       if(nodes[i][j].isDead){
         nodes[i][j].decideRoot(nodes, minContrast, minSize, alpha);
       }
@@ -117,14 +129,6 @@ void pyramidAlgorithm(Mat img, double minContrast, double minSize, double alpha)
     for(int j =0; j<nodes[i].size(); j++){
       if(nodes[i][j].isSurvived){
         nodes[i][j].updateVariance(nodes);
-      }
-    }
-  }
-
-  for(int i = 0; i < nodes.size(); i++){
-    for(int j =0; j<nodes[i].size(); j++){
-      if(nodes[i][j].isRoot){
-        std::cout << "ROOOT" << '\n';
       }
     }
   }

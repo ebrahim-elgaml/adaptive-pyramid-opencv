@@ -18,7 +18,7 @@ class Node {
     bool isSurvived, isDead, isRoot;
     double variance, mean;
     Point2i loc;
-    Point2i bestSurvivor;
+    Node * bestSurvivor;
     std::vector<Point2i> neighbours;
     Node ();
     bool isMarked();
@@ -39,7 +39,7 @@ class Node {
 Node::Node(){
   isSurvived = false;
   isDead = false;
-  bestSurvivor = Point2i(-1, -1);
+  bestSurvivor = 0;
 }
 bool Node::isMarked() {
   return isSurvived || isDead;
@@ -77,26 +77,24 @@ vector<Node> Node::getSurvivingNodes(std::vector< std::vector<Node> > & nodes) {
 }
 void Node::createLink(Mat img, std::vector< std::vector<Node> > & nodes) {
   vector<Node> survivingNodes = getSurvivingNodes(nodes);
-  // std::cout << "/* message2 */" << '\n';
   Node leastNode;
 
   if(survivingNodes.size() == 1) {
-    bestSurvivor = Point2i(survivingNodes[0].loc.x, survivingNodes[0].loc.y);
+    bestSurvivor = &survivingNodes[0];
     return;
   }
   double min = abs(variance - survivingNodes[0].mean);
   leastNode = survivingNodes[0];
+  int leastIndex = 0;
   for(int i=0; i<survivingNodes.size(); i++) {
     double diff = mean - survivingNodes[i].mean;
     if(abs(diff) < min) {
       min = diff;
-      leastNode= survivingNodes[i];
+      leastIndex = i;
+      leastNode = survivingNodes[i];
     }
   }
-  bestSurvivor = Point2i(leastNode.loc.x, leastNode.loc.y);
-}
-bool Node::hasParent(){
-  return bestSurvivor.x != -1 && bestSurvivor.y!=-1;
+  bestSurvivor = & survivingNodes[leastIndex];
 }
 void Node::linkSurvivors(std::vector< std::vector<Node> > & nodes){
   if(isDead) return;
@@ -105,7 +103,7 @@ void Node::linkSurvivors(std::vector< std::vector<Node> > & nodes){
     int x = neighbours[i].x;
     int y = neighbours[i].y;
 
-    if(nodes[y][x].bestSurvivor.x == loc.x && nodes[y][x].bestSurvivor.y == loc.y){
+    if(nodes[y][x].bestSurvivor -> loc.x == loc.x && nodes[y][x].bestSurvivor -> loc.y == loc.y){
       std::vector<Point2i> currentNeighbours =  nodes[y][x].neighbours;
       for(int j =0; j < currentNeighbours.size(); j++){
         Point2i p = Point2i(currentNeighbours[j].x, currentNeighbours[j].y);
@@ -113,7 +111,7 @@ void Node::linkSurvivors(std::vector< std::vector<Node> > & nodes){
         if(nodes[p.y][p.x].isSurvived){
           newPoint = p;
         } else {
-          newPoint = nodes[p.y][p.x].bestSurvivor;
+          newPoint = nodes[p.y][p.x].bestSurvivor->loc;
         }
         if(newPoint.x != loc.x || newPoint.y != loc.y){
           if(!checkPoint(newPoint, points)) points.push_back(newPoint);
@@ -125,6 +123,10 @@ void Node::linkSurvivors(std::vector< std::vector<Node> > & nodes){
   neighbours.insert(neighbours.end(), points.begin(), points.end());
 }
 void Node::addNeighbour(Point2i p){
+  if(neighbours.size() == 0 ){
+    neighbours.push_back(p);
+    return;
+  }
   for(int i = 0 ; i < neighbours.size(); i++){
     if(neighbours[i].x == p.x && neighbours[i].y == p.y) return;
   }
@@ -132,9 +134,8 @@ void Node::addNeighbour(Point2i p){
 }
 void Node::decideRoot(vector< vector<Node> > & nodes, double minContrast, double minSize, double alpha) {
   if(isSurvived) return;
-  Node parentNode = nodes[bestSurvivor.y][bestSurvivor.x];
-  double diff = abs(mean - parentNode.mean);
-  int x = parentNode.getNoOfChildren(nodes);
+  double diff = abs(mean - bestSurvivor->mean);
+  int x = bestSurvivor->getNoOfChildren(nodes);
   // std::cout << x << '\n';
   double S;
   if(x > minSize){
@@ -152,7 +153,7 @@ int Node::getNoOfChildren(vector< vector<Node> > & nodes) {
   int sum =0;
   for(int i =0; i  < nodes.size(); i++){
     for(int j =0; j <nodes[i].size(); j++){
-      if(nodes[i][j].isDead && nodes[i][j].bestSurvivor.x == loc.x && nodes[i][j].bestSurvivor.y == loc.y){
+      if(nodes[i][j].isDead && nodes[i][j].bestSurvivor->loc.x == loc.x && nodes[i][j].bestSurvivor->loc.y == loc.y){
         sum++;
       }
     }
