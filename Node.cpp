@@ -12,6 +12,7 @@ using namespace cv;
 
 std::vector<Point2i> getneighbourhood(Mat, int, int);
 bool checkPoint(Point2i, std::vector<Point2i>);
+// void removeRoots(std::vector< std::vector<Node> > &);
 class Node {
   public:
     bool isSurvived, isDead, isRoot;
@@ -30,6 +31,8 @@ class Node {
     void addNeighbour(Point2i);
     void decideRoot(vector< vector<Node> > &, double, double, double);
     int getNoOfChildren(vector< vector<Node> > &);
+    void updateMean(std::vector< std::vector<Node> > &);
+    void updateVariance(std::vector< std::vector<Node> > &);
 };
 
 Node::Node(){
@@ -155,6 +158,30 @@ int Node::getNoOfChildren(vector< vector<Node> > & nodes) {
   }
   return sum;
 }
+void Node::updateMean(std::vector< std::vector<Node> > & nodes) {
+  double mean = 0;
+  double result = 0;
+  for(int i = 0; i<neighbours.size();i++) {
+    int x = neighbours[i].x;
+    int y= neighbours[i].y;
+    mean += nodes[y][x].mean;
+  }
+  result = mean/neighbours.size();
+  mean = result;
+}
+void Node::updateVariance(std::vector< std::vector<Node> > & nodes) {
+  double rVariance = 0;
+  double resVariance = 0;
+  for(int i =0;i<neighbours.size();i++) {
+    int x = neighbours[i].x;
+    int y= neighbours[i].y;
+    double newMean = nodes[y][x].mean;
+    double variance = mean - newMean;
+    rVariance+= variance*variance;
+  }
+  resVariance = rVariance/neighbours.size();
+  variance = resVariance;
+}
 void Node::print() {
   std::cout << "(S: " << isSurvived << ", D: " << isDead << ", v: " << variance << ", m: " << mean << ", p: " << loc <<")";
 }
@@ -186,6 +213,23 @@ std::vector<Point2i> getneighbourhood(Mat image, int y, int x){
   if(y2 < image.rows) neighbourPoints.push_back(Point2i(x,y2));
   if(x2 < image.cols && y2 < image.rows) neighbourPoints.push_back(Point2i(x2,y2));
   return neighbourPoints;
+}
+void removeRoots(std::vector< std::vector<Node> > & nodes){
+  for(int i=0; i< nodes.size(); i++){
+    for(int j =0; j< nodes[i].size(); j++){
+      Node n = nodes[i][j];
+      vector<Point2i> points = n.neighbours;
+      std::vector<int> toRemove;
+      for( int k=0; k<points.size(); k++){
+        if(nodes[points[k].y][points[k].x].isRoot){
+          toRemove.push_back(k);
+        }
+      }
+      for (int k = 0; k < toRemove.size(); ++k) {
+        n.neighbours.erase(n.neighbours.begin() + toRemove[i]);
+      }
+    }
+  }
 }
 bool checkPoint(Point2i p, std::vector<Point2i> v) {
   for(int i=0; i<v.size(); i++)

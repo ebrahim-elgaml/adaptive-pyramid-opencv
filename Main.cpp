@@ -86,6 +86,7 @@ void pyramidAlgorithm(Mat img, double minContrast, double minSize, double alpha)
       }
     }
   }
+  stablizeNodes(nodes);
   for(int i = 0; i < nodes.size(); i++){
     for(int j =0; j<nodes[i].size(); j++){
       if(nodes[i][j].isDead){
@@ -93,7 +94,21 @@ void pyramidAlgorithm(Mat img, double minContrast, double minSize, double alpha)
       }
     }
   }
-  stablizeNodes(nodes);
+  removeRoots(nodes);
+  for(int i = 0; i < nodes.size(); i++){
+    for(int j =0; j<nodes[i].size(); j++){
+      if(nodes[i][j].isSurvived){
+        nodes[i][j].updateMean(nodes);
+      }
+    }
+  }
+  for(int i = 0; i < nodes.size(); i++){
+    for(int j =0; j<nodes[i].size(); j++){
+      if(nodes[i][j].isSurvived){
+        nodes[i][j].updateVariance(nodes);
+      }
+    }
+  }
   // Test neighbours
   for(int i = 0; i < nodes.size(); i++){
     for(int j =0; j<nodes[i].size(); j++){
