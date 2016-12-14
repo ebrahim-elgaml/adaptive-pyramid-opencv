@@ -46,6 +46,8 @@ Node::Node(){
   bestSurvivor = 0;
   isRoot = false;
   level = 0;
+  mean = 0;
+  variance = 0;
 }
 bool Node::isMarked() {
   return isSurvived || isDead;
@@ -76,10 +78,10 @@ vector<Node*> Node::getSurvivingNodes() {
 void Node::createLink() {
   vector<Node*> survivingNodes = getSurvivingNodes();
   if(survivingNodes.size() == 1) {
-    bestSurvivor = survivingNodes[0];
+    this->bestSurvivor = survivingNodes[0];
     return;
   }
-  double min = abs(variance - survivingNodes[0]->mean);
+  double min = abs(this->mean - survivingNodes[0]->mean);
   int leastIndex = 0;
   for(int i=0; i<survivingNodes.size(); i++) {
     double diff = mean - survivingNodes[i]->mean;
@@ -88,17 +90,17 @@ void Node::createLink() {
       leastIndex = i;
     }
   }
-  bestSurvivor = survivingNodes[leastIndex];
+  this->bestSurvivor = survivingNodes[leastIndex];
 }
 void Node::linkSurvivors(){
   if(isDead) return;
   vector<Node*> points;
-  for(int i =0; i<neighbours.size();i++) {
-    if(neighbours[i]->bestSurvivor->loc.x == loc.x && neighbours[i]->bestSurvivor->loc.y == loc.y){
-      std::vector<Node*> currentNeighbours =  neighbours[i]->neighbours;
+  for(int i =0; i < this->neighbours.size();i++) {
+    if(this->neighbours[i]->bestSurvivor->loc.x == loc.x && this->neighbours[i]->bestSurvivor->loc.y == loc.y){
+      std::vector<Node*> currentNeighbours =  this->neighbours[i]->neighbours;
       for(int j =0; j < currentNeighbours.size(); j++){
         if(currentNeighbours[j]->isSurvived){
-          if(currentNeighbours[j]->loc.x != loc.x || currentNeighbours[j]->loc.y != loc.y){
+          if(currentNeighbours[j]->loc.x != this->loc.x || currentNeighbours[j]->loc.y != this->loc.y){
             points.push_back(currentNeighbours[j]);
           }
         } else {
@@ -107,13 +109,13 @@ void Node::linkSurvivors(){
       }
     }
   }
-  neighbours.clear();
+  this->neighbours.clear();
   for(int i =0 ; i < points.size(); i++){
-    if(!(points[i]->loc.x == loc.x & points[i]->loc.y == loc.y)) addNeighbour(points[i]);
+    if(!(points[i]->loc.x == this->loc.x & points[i]->loc.y == this->loc.y)) addNeighbour(points[i]);
   }
 }
 void Node::addNeighbour(Node *n){
-  if(neighbours.size() == 0 ){
+  if(this->neighbours.size() == 0 ){
     if(!(n->loc.x == loc.x & n->loc.y == loc.y)) neighbours.push_back(n);
     return;
   }
@@ -124,7 +126,7 @@ void Node::addNeighbour(Node *n){
 }
 void Node::decideRoot(double minContrast, double minSize, double alpha) {
   if(isSurvived) return;
-  double diff = abs(mean - bestSurvivor->mean);
+  double diff = abs(this->mean - bestSurvivor->mean);
   int x;
   if(bestSurvivor->level == currentLevel) {
     x = bestSurvivor->getNoOfChildren();
@@ -145,32 +147,30 @@ void Node::decideRoot(double minContrast, double minSize, double alpha) {
 int Node::getNoOfChildren() {
   if(isDead) return 0;
   int sum =0;
-  for(int i = 0; i < neighbours.size(); i++){
-    if(neighbours[i]->bestSurvivor == this){
-      if(neighbours[i]->bestSurvivor->level == currentLevel) sum++;
+  for(int i = 0; i < this->neighbours.size(); i++){
+    if(this->neighbours[i]->bestSurvivor == this){
+      if(this->neighbours[i]->bestSurvivor->level == currentLevel) sum++;
     }
   }
   return sum;
 }
 void Node::updateMean() {
-  double mean = 0;
-  double result = 0;
-  for(int i = 0; i<neighbours.size();i++) {
-    mean += neighbours[i]->mean;
+  double newMean = 0;
+  for(int i = 0; i < this->neighbours.size(); i++) {
+    newMean += neighbours[i]->mean;
   }
-  result = mean/neighbours.size();
-  mean = result;
+  newMean = newMean * 1.0/neighbours.size();
+  this->mean = newMean;
 }
 void Node::updateVariance() {
   double rVariance = 0;
-  double resVariance = 0;
   for(int i =0;i<neighbours.size();i++) {
     double newMean = neighbours[i]->mean;
-    double variance = mean - newMean;
-    rVariance+= variance*variance;
+    double variance = this->mean - newMean;
+    rVariance += variance*variance;
   }
-  resVariance = rVariance/neighbours.size();
-  variance = resVariance;
+  rVariance = rVariance * 1.0 /neighbours.size();
+  this->variance = rVariance;
 }
 void Node::removeRoot(){
   if(isRoot){
