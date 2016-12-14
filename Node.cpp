@@ -10,6 +10,8 @@
 using namespace std;
 using namespace cv;
 
+static int currentLevel = 0;
+
 std::vector<Point2i> getneighbourhood(Mat, int, int);
 bool checkPoint(Point2i, std::vector<Point2i>);
 class Node {
@@ -19,19 +21,20 @@ class Node {
     Point2i loc;
     Node * bestSurvivor;
     std::vector<Node *> neighbours;
+    int level;
     Node ();
     bool isMarked();
     void print();
-    void decide(std::vector< std::vector<Node> > &);
-    vector<Node*> getSurvivingNodes(std::vector< std::vector<Node> > &);
-    void createLink(std::vector< std::vector<Node> > &);
+    void decide();
+    vector<Node*> getSurvivingNodes();
+    void createLink();
     bool hasParent();
-    void linkSurvivors(std::vector< std::vector<Node> > &);
+    void linkSurvivors();
     void addNeighbour(Node*);
-    void decideRoot(vector< vector<Node> > &, double, double, double);
-    int getNoOfChildren(vector< vector<Node> > &);
-    void updateMean(std::vector< std::vector<Node> > &);
-    void updateVariance(std::vector< std::vector<Node> > &);
+    void decideRoot(double, double, double);
+    int getNoOfChildren();
+    void updateMean();
+    void updateVariance();
     vector<Point2i> getNotRootNeighbours (std::vector< std::vector<Node> > &);
     void removeRoot();
     void resestNode();
@@ -42,11 +45,12 @@ Node::Node(){
   isDead = false;
   bestSurvivor = 0;
   isRoot = false;
+  level = 0;
 }
 bool Node::isMarked() {
   return isSurvived || isDead;
 }
-void Node::decide(std::vector< std::vector<Node> > &nodes){
+void Node::decide(){
   if(isMarked()) {
     return;
   }
@@ -62,15 +66,15 @@ void Node::decide(std::vector< std::vector<Node> > &nodes){
   }
 }
 
-vector<Node*> Node::getSurvivingNodes(std::vector< std::vector<Node> > & nodes) {
+vector<Node*> Node::getSurvivingNodes() {
   vector<Node*> survivingNodes;
   for(int i = 0; i < neighbours.size(); i++) {
     if (neighbours[i]->isSurvived) survivingNodes.push_back(neighbours[i]);
   }
   return survivingNodes;
 }
-void Node::createLink(std::vector< std::vector<Node> > & nodes) {
-  vector<Node*> survivingNodes = getSurvivingNodes(nodes);
+void Node::createLink() {
+  vector<Node*> survivingNodes = getSurvivingNodes();
   if(survivingNodes.size() == 1) {
     bestSurvivor = survivingNodes[0];
     return;
@@ -86,7 +90,7 @@ void Node::createLink(std::vector< std::vector<Node> > & nodes) {
   }
   bestSurvivor = survivingNodes[leastIndex];
 }
-void Node::linkSurvivors(std::vector< std::vector<Node> > & nodes){
+void Node::linkSurvivors(){
   if(isDead) return;
   vector<Node*> points;
   for(int i =0; i<neighbours.size();i++) {
@@ -103,25 +107,30 @@ void Node::linkSurvivors(std::vector< std::vector<Node> > & nodes){
       }
     }
   }
-  if(points.size() > 0) neighbours.clear();
+  neighbours.clear();
   for(int i =0 ; i < points.size(); i++){
-    addNeighbour(points[i]);
+    if(!(points[i]->loc.x == loc.x & points[i]->loc.y == loc.y)) addNeighbour(points[i]);
   }
 }
 void Node::addNeighbour(Node *n){
   if(neighbours.size() == 0 ){
-    neighbours.push_back(n);
+    if(!(n->loc.x == loc.x & n->loc.y == loc.y)) neighbours.push_back(n);
     return;
   }
   for(int i = 0 ; i < neighbours.size(); i++){
-    if(neighbours[i] == n) return;
+    if(neighbours[i]->loc.x == n->loc.x && neighbours[i]->loc.y == n->loc.y) return;
   }
   neighbours.push_back(n);
 }
-void Node::decideRoot(vector< vector<Node> > & nodes, double minContrast, double minSize, double alpha) {
+void Node::decideRoot(double minContrast, double minSize, double alpha) {
   if(isSurvived) return;
   double diff = abs(mean - bestSurvivor->mean);
-  int x = bestSurvivor->getNoOfChildren(nodes);
+  int x;
+  if(bestSurvivor->level == currentLevel) {
+    x = bestSurvivor->getNoOfChildren();
+  } else {
+    return;
+  }
   double S;
   if(x > minSize){
     S = minContrast;
@@ -133,19 +142,17 @@ void Node::decideRoot(vector< vector<Node> > & nodes, double minContrast, double
   }
 }
 
-int Node::getNoOfChildren(vector< vector<Node> > & nodes) {
+int Node::getNoOfChildren() {
   if(isDead) return 0;
   int sum =0;
-  for(int i =0; i  < nodes.size(); i++){
-    for(int j =0; j <nodes[i].size(); j++){
-      if(nodes[i][j].isDead && nodes[i][j].bestSurvivor == this){
-        sum++;
-      }
+  for(int i = 0; i < neighbours.size(); i++){
+    if(neighbours[i]->bestSurvivor == this){
+      if(neighbours[i]->bestSurvivor->level == currentLevel) sum++;
     }
   }
   return sum;
 }
-void Node::updateMean(std::vector< std::vector<Node> > & nodes) {
+void Node::updateMean() {
   double mean = 0;
   double result = 0;
   for(int i = 0; i<neighbours.size();i++) {
@@ -154,7 +161,7 @@ void Node::updateMean(std::vector< std::vector<Node> > & nodes) {
   result = mean/neighbours.size();
   mean = result;
 }
-void Node::updateVariance(std::vector< std::vector<Node> > & nodes) {
+void Node::updateVariance() {
   double rVariance = 0;
   double resVariance = 0;
   for(int i =0;i<neighbours.size();i++) {

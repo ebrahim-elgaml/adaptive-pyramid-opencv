@@ -7,7 +7,7 @@
 #include <math.h>
 #include<fstream>
 #include<dirent.h>
-#include "PyramidLevel.cpp"
+#include "Node.cpp"
 using namespace std;
 
 void printVectorOfVectores(std::vector< std::vector<double> > v) {
